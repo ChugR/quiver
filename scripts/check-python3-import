@@ -24,7 +24,7 @@ import sys
 def main():
     try:
         importlib.import_module(sys.argv[1])
-        sys.exit(0)
+        return
     except:
         sys.exit(1)
 
