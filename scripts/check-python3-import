@@ -22,7 +22,11 @@ import importlib
 import sys
 
 def main():
-    importlib.import_module(sys.argv[1])
+    try:
+        importlib.import_module(sys.argv[1])
+        sys.exit(0)
+    except:
+        sys.exit(1)
 
 if __name__ == "__main__":
     try:
