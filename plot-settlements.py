@@ -22,6 +22,7 @@ import matplotlib.transforms as mtransforms
 import numpy as np
 import datetime
 import sys
+import os
 import traceback
 
 COLOR_RECEIVER = "green"
@@ -39,6 +40,7 @@ def main():
     r_filename = "{}/receiver-transfers.csv".format(folder)
     s_filename = "{}/sender-settlement.csv".format(folder)
     c_filename = "{}/sender-transfers.csv".format(folder)
+    d_filename = "{}/dumpcap.csv".format(folder)
 
     basename = title.replace(" ", "_")
     basename = basename.replace("/", "_")
@@ -105,7 +107,7 @@ def main():
     plot_latencies(v_c, v_r, v_s, v_x, v_m, folder, title, w_filebase, t0, credit_values=False)
     plot_latencies(v_c, v_r, v_s, v_x, v_m, folder, title, w_filebase, t0, credit_values=True)
 
-    plot_latencies_lines(v_c, v_r, v_s, v_x, v_m, folder, title, w_filebase, t0, vertical_lines=True)
+    plot_latencies_lines(v_c, v_r, v_s, v_x, v_m, folder, title, w_filebase, t0, d_filename, vertical_lines=True)
 
 
 def plot_latencies(_v_c, _v_r, _v_s, _v_x, _v_m, folder, title, w_filebase, t0, credit_values=False):
@@ -179,7 +181,7 @@ def plot_latencies(_v_c, _v_r, _v_s, _v_x, _v_m, folder, title, w_filebase, t0, 
     plt.savefig("{}{}.pdf".format(w_filebase, file_suffix), bbox_inches='tight')
 
 
-def plot_latencies_lines(_v_c, _v_r, _v_s, _v_x, _v_m, folder, title, w_filebase, t0, vertical_lines=False):
+def plot_latencies_lines(_v_c, _v_r, _v_s, _v_x, _v_m, folder, title, w_filebase, t0, dumpcap_file, vertical_lines=False):
 
     file_suffix = "-vlines" if vertical_lines else "-hlines"
 
@@ -268,6 +270,36 @@ def plot_latencies_lines(_v_c, _v_r, _v_s, _v_x, _v_m, folder, title, w_filebase
     lns = l2s + l2r
     labels = [l.get_label() for l in lns]
     ax2.legend(lns, labels, loc="upper right")
+
+    # Optional dumpcap on-wire points
+    if os.path.exists(dumpcap_file):
+        # plot the wireshark/dumpcap on-wire time circle markers
+        dc_t = [] # dumpcap transfer
+        dc_d = [] # dumpcap dispositions
+        with open(dumpcap_file, 'r') as dc_in:
+            line = dc_in.readline()
+            while line:
+                dc_key, dc_time, dc_v1, dc_v2 = line.split(',')
+                dc_time = (float(dc_time) * 1000000.0) - t0
+                if dc_key == "t":
+                    dc_t.append( (int(dc_v1), dc_time) )
+                else:
+                    v1 = int(dc_v1)
+                    v2 = int(dc_v2)
+                    for i in range(v1, v2+1):
+                        dc_d.append( (i, dc_time) )
+                line = dc_in.readline()
+        for tr_n, tr_t in dc_t:
+            # transfer 'n' was on the wire at relative 't'
+            x = _v_x[tr_n]
+            y = float(tr_t)
+            plt.plot(x, y, 'bo')
+            #print("Plotted %f, %f" % (x0, y))
+        for di_n, di_t in dc_d:
+            # disposition 'n' was on the wire at relative 't'
+            x = _v_x[di_n]
+            y = float(di_t)
+            plt.plot(x, y, 'go')
 
     plt.title(title)
 
