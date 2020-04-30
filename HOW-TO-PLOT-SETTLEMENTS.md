@@ -17,7 +17,7 @@ dispatch. Now what?
 5. Run analysis
 	
 	chug@unused quiver> plot-settlements <directory> <plot-title>
-	quiver  20200108-dispatch-master-proton-master "Dispatch 1.12, proton master"
+	./plot_settlements.py  20200108-dispatch-master-proton-master "Dispatch 1.12, proton master"
 	
 6. Enjoy the output
      .pdf        - the main output
