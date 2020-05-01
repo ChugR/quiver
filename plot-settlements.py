@@ -262,6 +262,11 @@ def plot_latencies_lines(_v_c, _v_r, _v_s, _v_x, _v_m, folder, title, w_filebase
         v_2r.append(tnr)
         v_2s.append(tns)
         next_time = inflight.next_event_time()
+    # debug this: HACK ALERT v_ic and v_r are 4366 but v_2r and v_2s are 4358. Then plot fails.
+    while (len(v_2r) < len(v_ic)):
+        sv_x.append(sv_x[-1])
+        v_2r.append(0)
+        v_2s.append(0)
     # in-flight lines
     l2r = ax2.plot(sv_x, v_2r, label="transfer in flight", color=COLOR_RECEIVER, linewidth=LINE_WIDTH, ls='dotted')
     l2s = ax2.plot(sv_x, v_2s, label="settlement in flight", color=COLOR_SENDER, linewidth=LINE_WIDTH, ls='dotted')
@@ -316,8 +321,12 @@ def plot_latencies_lines(_v_c, _v_r, _v_s, _v_x, _v_m, folder, title, w_filebase
             timeraw = float(timerawus) / 1000000.0
             timeobj = datetime.datetime.fromtimestamp(timeraw)
             tod = datetime.datetime.strftime(timeobj, "%Y-%m-%d %H:%M:%S.%f")
-            pf.write("{}, {}, {}, {}, {}, {}, {}, {}, {}, {}\n".format(
-                i, v_m[i], tod, timerawus, v_x[i], v_ic[i], v_r[i], v_s[i], v_2r[i], v_2s[i]))
+            try:
+                pf.write("{}, {}, {}, {}, {}, {}, {}, {}, {}, {}\n".format(
+                    i, v_m[i], tod, timerawus, v_x[i], v_ic[i], v_r[i], v_s[i], v_2r[i], v_2s[i]))
+            except:
+                import pdb
+                pdb.set_trace()
 
 def _parse_send(line):
     _message_id, _send_time, _credit = line.split(",", 2)
