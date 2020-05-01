@@ -44,4 +44,5 @@ do
 	read -p "Ready to run $test test. Restart three routers with config files from scripts-cr/t5-A.conf, B and C ..." dummy
 	echo Run this first in receiver window: scripts-cr/t5-receiver.sh $regroot/$configuration/$test
 	echo Run this next  in sender   window: scripts-cr/t5-sender.sh   $regroot/$configuration/$test
+	read -p "Press enter when the scripts have completed..." dummy
 done
