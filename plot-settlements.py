@@ -263,10 +263,10 @@ def plot_latencies_lines(_v_c, _v_r, _v_s, _v_x, _v_m, folder, title, w_filebase
         v_2s.append(tns)
         next_time = inflight.next_event_time()
     # debug this: HACK ALERT v_ic and v_r are 4366 but v_2r and v_2s are 4358. Then plot fails.
-    while (len(v_2r) < len(v_ic)):
-        sv_x.append(sv_x[-1])
-        v_2r.append(0)
-        v_2s.append(0)
+    #while (len(v_2r) < len(v_ic)):
+    #    sv_x.append(sv_x[-1])
+    #    v_2r.append(0)
+    #    v_2s.append(0)
     # in-flight lines
     l2r = ax2.plot(sv_x, v_2r, label="transfer in flight", color=COLOR_RECEIVER, linewidth=LINE_WIDTH, ls='dotted')
     l2s = ax2.plot(sv_x, v_2s, label="settlement in flight", color=COLOR_SENDER, linewidth=LINE_WIDTH, ls='dotted')
