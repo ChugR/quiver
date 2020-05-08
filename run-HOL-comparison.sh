@@ -16,87 +16,116 @@ regroot=${1:-HOL-tests}
 echo `date "+%Y-%m-%d %R:%S.%N"`
 echo Storing regression databases in $regroot
 mkdir $regroot
-for configuration in "D1.12master-P0.31master Dkgiusti_DISPATCH_1545-P0.31master"
+for configuration in "Dkgiusti_DISPATCH_1545-P0.31master"
 do
 	echo Please build and install proton-dispatch to support $configuration.
 	echo Remember to build with -DCMAKE_BUILD_TYPE=RelWithDebInfo.
 	echo Remember to rebuild quiver if a new version of proton was just installed.
 	~/bin/git-proton-dispatch-state.sh
 	read -p "Press enter to continue..." dummy
+	~/bin/git-proton-dispatch-state.sh
 	set -o xtrace
 	mkdir -p $regroot/$configuration
 	set +o xtrace
 	
 	testb=P2P
-	read -p "Ready to run $testb test. Ensure that no routers are running..." dummy
-	set -o xtrace
-	for testpass in "0 1 2"
-	do
-		test=${testb}_${testpass}
-		mkdir $regroot/$configuration/$test
-		quiver q1 --peer-to-peer --count 100000 --body-size 500000 \
-			   --output $regroot/$configuration/$test              \
-			   1> $regroot/$configuration/$test/console-log.txt 2>&1
-	done
-	set +o xtrace
+	echo "Ready to run $testb test. Ensure that no routers are running."
+	read -p "Press enter to run test. Enter text to skip :" skipflag
+	if [ -z ${skipflag} ];
+	then
+		set -o xtrace
+		for testpass in `seq 1 3`;
+		do
+			test=${testb}_${testpass}
+			mkdir $regroot/$configuration/$test
+			quiver q1 --peer-to-peer --count 100000 --body-size 500000 --timeout 120000 --output $regroot/$configuration/$test   1> $regroot/$configuration/$test/console-log.txt 2>&1
+		done
+		set +o xtrace
+	else
+		echo Skipping test $testb
+	fi
 	
 	testb=P2P-settlement
-	read -p "Ready to run $testb test. Ensure that no routers are running..." dummy
-	set -o xtrace
-	for testpass in "0 1 2"
-	do
-		test=${testb}_${testpass}
-		mkdir $regroot/$configuration/$test
-		quiver q1 --peer-to-peer --count 100000 --body-size 500000 \
-			   --output $regroot/$configuration/$test --settlement \
-			   1> $regroot/$configuration/$test/console-log.txt 2>&1
-	done
-	#./plot-settlements.py $regroot/$configuration/$test $regroot/$configuration/$test
-	set +o xtrace
+	echo "Ready to run $testb test. Ensure that no routers are running."
+	read -p "Press enter to run test. Enter text to skip :" skipflag
+	if [ -z ${skipflag} ];
+	then
+		set -o xtrace
+		for testpass in `seq 1 3`;
+		do
+			test=${testb}_${testpass}
+			mkdir $regroot/$configuration/$test
+			quiver q1 --peer-to-peer --count 100000 --body-size 500000 --timeout 120000 --output $regroot/$configuration/$test --settlement 1> $regroot/$configuration/$test/console-log.txt 2>&1
+		done
+		#./plot-settlements.py $regroot/$configuration/$test $regroot/$configuration/$test
+		set +o xtrace
+	else
+		echo Skipping test $testb
+	fi
 	
 	testb=1QDR
-	read -p "Ready to run $testb test. Restart one router with no config file..." dummy
-	set -o xtrace
-	for testpass in "0 1 2"
-	do
-		test=${testb}_${testpass}
-		mkdir $regroot/$configuration/$test
-		quiver q1 --count 100000 --body-size 500000 \
-			   --output $regroot/$configuration/$test              \
-			   1> $regroot/$configuration/$test/console-log.txt 2>&1
-	done
-	set +o xtrace
+	echo "Ready to run $testb test. Restart one router with no config file."
+	read -p "ReadPress enter to run test. Enter text to skip :" skipflag
+	if [ -z ${skipflag} ];
+	then
+		set -o xtrace
+		for testpass in `seq 1 3`;
+		do
+			test=${testb}_${testpass}
+			mkdir $regroot/$configuration/$test
+			quiver q1 --count 100000 --body-size 500000 --timeout 120000 --output $regroot/$configuration/$test 1> $regroot/$configuration/$test/console-log.txt 2>&1
+		done
+		set +o xtrace
+	else
+		echo Skipping test $testb
+	fi
 
 	testb=1QDR-settlement
-	read -p "Ready to run $testb test. Restart one router with no config file..." dummy
-	set -o xtrace
-	for testpass in "0 1 2"
-	do
-		test=${testb}_${testpass}
-		mkdir $regroot/$configuration/$test
-		quiver q1 --count 100000 --body-size 500000 \
-			   --output $regroot/$configuration/$test --settlement \
-			   1> $regroot/$configuration/$test/console-log.txt 2>&1
-	done
-	#./plot-settlements.py $regroot/$configuration/$test $regroot/$configuration/$test
-	set +o xtrace
+	echo "Ready to run $testb test. Restart one router with no config file."
+	read -p "ReadPress enter to run test. Enter text to skip :" skipflag
+	if [ -z ${skipflag} ];
+	then
+		set -o xtrace
+		for testpass in `seq 1 3`;
+		do
+			test=${testb}_${testpass}
+			mkdir $regroot/$configuration/$test
+			quiver q1 --count 100000 --body-size 500000 --timeout 120000 --output $regroot/$configuration/$test --settlement 1> $regroot/$configuration/$test/console-log.txt 2>&1
+		done
+		#./plot-settlements.py $regroot/$configuration/$test $regroot/$configuration/$test
+		set +o xtrace
+	else
+		echo Skipping test $testb
+	fi
 	
 	testb=3QDR-settlement
-	read -p "Ready to run $testb test. Restart three routers with config files from scripts-cr/t5-A.conf, B and C ..." dummy
-	for testpass in "0 1 2"
-	do
-		test=${testb}_${testpass}
-		quiver-arrow --output $regroot/$configuration/$test --count 100000  \
-					 --settlement --timeout 120000 receive amqp://127.0.0.1:5676/examples &
-		rpid=$!
-		quiver-arrow --output $regroot/$configuration/$test --count 100000 --body-size 500000 \
-					 --settlement send amqp://127.0.0.1:5672/examples &
-		spid=$!
-		wait $rpid
-		wait $spid
-	done
-	set -o xtrace
-	#./plot-settlements.py $regroot/$configuration/$test $regroot/$configuration/$test
-	set +o xtrace
+	echo "Ready to run $testb test. Restart three routers with config files from scripts-cr/t5-A.conf, B and C ."
+	read -p "Press enter to run test. Enter text to skip :" skipflag
+	if [ -z ${skipflag} ];
+	then
+		set -o xtrace
+		for testpass in `seq 1 3`;
+		do
+			test=${testb}_${testpass}_1
+			quiver-arrow --output $regroot/$configuration/$test --count 100000 --settlement --timeout 120000 receive amqp://127.0.0.1:5676/examples &
+			rpid1=$!
+			quiver-arrow --output $regroot/$configuration/$test --count 100000 --body-size 500000 --settlement send amqp://127.0.0.1:5672/examples &
+			spid1=$!
+			
+			test=${testb}_${testpass}_2
+			quiver-arrow --output $regroot/$configuration/$test --count 100000 --settlement --timeout 120000 receive amqp://127.0.0.1:5676/q1 &
+			rpid2=$!
+			quiver-arrow --output $regroot/$configuration/$test --count 100000 --body-size 500000 --settlement send amqp://127.0.0.1:5672/q1 &
+			spid2=$!
+			wait $rpid1
+			wait $spid1
+			wait $rpid2
+			wait $spid2
+		done
+		#./plot-settlements.py $regroot/$configuration/$test $regroot/$configuration/$test
+		set +o xtrace
+	else
+		echo Skipping test $testb
+	fi
 done
 
