@@ -1,0 +1,129 @@
+Quiver latency test cases/results log
+
+1. peer to peer
+  * no qdrouterd
+  * quiver --peer-to-peer --count 20000 --settlement \
+    --output c-20k-qdr-p2p q0
+  * plot-settlements.py c-20k-qdr-p2p "Quiver peer-to-peer"
+
+2. sender-receiver on router port 5672
+  * qdrouterd
+  * quiver --settlement ---output c-100k-qdr-5672-to-5672 -c 20000 q0
+  * plot-settlements.py c-20k-qdr-5672-5672 "Quiver snd/rcv to QDR 5672"
+
+3. link route
+  * qdrouterd -c lr.conf
+  * ./lr-broker.sh                                 c-20k-qdr-lr-5672-5674
+  *./ lr-client.sh                                 c-20k-qdr-lr-5672-5674
+  * cd into <dir> and 'xz -d' the transfers archive
+  * python q-receive-transactions_to_settlement.py c-20k-qdr-lr-5672-5674
+  * plot-settlements.py c-20k-qdr-5672-5674 "Quiver simple link route"
+
+4. One router, two connections
+  * qdrouterd -c t4.conf
+  * ./tr-receiver.sh    c-20k-2conns
+  * ./tr-sender.sh      c-20k-2conns
+  * plot-settlements.py c-20k-2conns "Quiver 1 QDR 2 ports"
+
+2019-05-22
+
+1. Peer-to-peer
+
+# no qdrouterd
+quiver q0 --output    t2-p2p --count 4000 --settlement --peer-to-peer
+./plot-settlements.py t2-p2p "t2-p2p peer-to-peer"
+
+2. One QDR
+
+qdrouterd
+quiver q0 --output    t2-1qdr --count 4000 --settlement
+./plot-settlements.py t2-1qdr "t2-1qdr one router"
+
+3. Link route
+
+qdrouterd -c lr.conf
+./lr-broker.sh         t2-linkroute
+# watch router console and wait for router to connect to broker. And then:
+./lr-client.sh         t2-linkroute
+./plot-settlements.py  t2-linkroute  "t2 link route one router"
+
+4. Two QDRs
+
+qdrouterd -c t4-A.conf
+qdrouterd -c t4-B.conf
+./t4-receiver.sh       t4-2qdr
+./t4-sender.sh         t4-2qdr
+./plot-settlements.py  t4-2qdr  "t4-2qdr two routers"
+
+5. Three QDRs
+
+qdrouterd -c t5-A.conf
+qdrouterd -c t5-B.conf
+qdrouterd -c t5-C.conf
+./t5-receiver.sh       t5-3qdrs
+./t5-sender.sh         t5-3qdrs
+./plot-settlements.py  t5-3qdrs "t4-2qdr two routers"
+
+6. Two-router link route
+
+qdrouterd -c t6-A.conf
+qdrouterd -c t6-B.conf
+./lr-broker.sh         t6-linkroute-2qdr
+# watch router console and wait for router to connect to broker. And then:
+./lr-client.sh         t6-linkroute-2qdr
+./plot-settlements.py  t6-linkroute-2qdr  "t6 link route two routers"
+
+====
+
+Tests around timing message_annotations.
+
+branch cr-msg-anno-2
+proton perf3b
+
+t4 - one router link route, 100 messages
+
+qdrouterd -c lr-100.conf
+lr-broker.sh t4-100
+<wait for link route to connect>
+lr-client-100.sh t4-100
+
+capture router console --> t4-1qdr-linkroute-100
+
+t6 - two routers link route, 100 messages
+
+qdrouterd -c t6-A.conf
+qdrouterd -c t6-B.conf
+./lr-broker.sh         t6-100-2qdr
+# watch router console and wait for router to connect to broker. And then:
+./lr-client-100.sh     t6-100-2qdr
+
+
+
+t7 - 3 routers message route 100 msgs
+
+rm -rf t7-100/
+rm -rf t7*.log
+qdrouterd -c t7-A-100.conf
+qdrouterd -c t7-B-100.conf
+qdrouterd -c t7-C-100.conf
+
+./t7-receiver-100.sh
+./t7-sender-100.sh
+
+killall qdrouterd
+mv t7*.log t7-100
+mv t7-100 <some safe place> # all the data is in there
+
+2020-01-08
+
+Resurrect a few tests
+
+1. One QDR
+
+git branch settle-track-1 (as was sitting there since last spring)
+qdrouterd
+quiver q0 --output    20200108-t2-1qd --count 4000 --settlement
+./plot-settlements.py 20200108-t2-1qdr "2020 t2-1qdr one router"
+
+Reran with fresh build of proton 0.27.1/dispatch 1.8.0
+versus                    proton master/dispatch master
